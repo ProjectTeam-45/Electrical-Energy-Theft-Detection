@@ -11,7 +11,7 @@ imputer = joblib.load("imputer.pkl")
 st.set_page_config(page_title="Electricity Theft Detection", layout="centered")
 
 st.title("⚡ Electricity Theft Detection System")
-st.write("AI-based system to detect electricity theft risk using consumption patterns.")
+st.write("AI-based system to detect electricity theft risk.")
 
 # ---------------- FEATURES ----------------
 features = [
@@ -46,6 +46,11 @@ for col in features:
 
 # ---------------- DATA PREP ----------------
 input_df = pd.DataFrame([user_input])
+
+# FIX: align columns BEFORE imputation
+input_df = input_df.reindex(columns=model.feature_names_in_, fill_value=0)
+
+# imputation
 input_df = imputer.transform(input_df)
 
 # ---------------- RISK FUNCTIONS ----------------
@@ -73,7 +78,7 @@ def explain_risk(prob_theft):
 # ---------------- PROBABILITY ----------------
 def get_probs(model, data):
     probs = model.predict_proba(data)[0]
-    return probs[0], probs[1]  # 0 = Theft, 1 = Normal
+    return probs[0], probs[1]   # 0 = Theft, 1 = Normal
 
 # ---------------- GRAPH ----------------
 def plot_probs(theft, normal):
@@ -101,7 +106,7 @@ def feature_importance():
         "Importance": model.feature_importances_
     }).sort_values(by="Importance", ascending=False)
 
-    return df
+    return df.head(5)
 
 # ---------------- PREDICTION ----------------
 if st.button("🔍 Analyze Risk"):
