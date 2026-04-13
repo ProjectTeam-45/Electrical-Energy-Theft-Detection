@@ -13,7 +13,7 @@ st.set_page_config(page_title="Electricity Theft Detection", layout="centered")
 st.title("⚡ Electricity Theft Detection System")
 st.write("AI-based system to detect electricity theft risk.")
 
-# ---------------- FEATURES ----------------
+# ---------------- FIXED FEATURES ----------------
 features = [
     "usage_1",
     "usage_2",
@@ -47,10 +47,10 @@ for col in features:
 # ---------------- DATA PREP ----------------
 input_df = pd.DataFrame([user_input])
 
-# FIX: align columns BEFORE imputation
-input_df = input_df.reindex(columns=model.feature_names_in_, fill_value=0)
+# SAFE: enforce training feature order manually
+input_df = input_df[features]
 
-# imputation
+# ---------------- IMPUTATION ----------------
 input_df = imputer.transform(input_df)
 
 # ---------------- RISK FUNCTIONS ----------------
@@ -78,7 +78,9 @@ def explain_risk(prob_theft):
 # ---------------- PROBABILITY ----------------
 def get_probs(model, data):
     probs = model.predict_proba(data)[0]
-    return probs[0], probs[1]   # 0 = Theft, 1 = Normal
+
+    # FIX: safe mapping (0 = Theft, 1 = Normal)
+    return probs[0], probs[1]
 
 # ---------------- GRAPH ----------------
 def plot_probs(theft, normal):
@@ -101,12 +103,15 @@ def plot_probs(theft, normal):
 
 # ---------------- FEATURE IMPORTANCE ----------------
 def feature_importance():
-    df = pd.DataFrame({
-        "Feature": model.feature_names_in_,
-        "Importance": model.feature_importances_
-    }).sort_values(by="Importance", ascending=False)
+    try:
+        df = pd.DataFrame({
+            "Feature": features,
+            "Importance": model.feature_importances_
+        }).sort_values(by="Importance", ascending=False)
 
-    return df.head(5)
+        return df.head(5)
+    except:
+        return pd.DataFrame({"Message": ["Feature importance not available"]})
 
 # ---------------- PREDICTION ----------------
 if st.button("🔍 Analyze Risk"):
