@@ -27,7 +27,6 @@ def generate_sample():
         "mtr_coef": round(random.uniform(0.8, 1.5), 2),
         "months_num": random.randint(1, 12),
 
-        # auto hidden features
         "mtr_tariff": 10,
         "mtr_status": 0,
         "mtr_code": 200,
@@ -57,7 +56,7 @@ with col2:
 
 data = st.session_state.data
 
-# ---------------- CLEAN INPUT UI ----------------
+# ---------------- INPUT UI ----------------
 st.subheader("📥 Enter Key Details")
 
 usage_1 = st.number_input("usage_1", value=float(data["usage_1"]))
@@ -99,12 +98,18 @@ full_input = {
     "months_num_calc": months_num * 1.1
 }
 
-input_df = pd.DataFrame([full_input])[model.feature_names_in_]
+# ---------------- FIX: SAFE COLUMN ORDERING ----------------
+if hasattr(model, "feature_names_in_"):
+    feature_order = list(model.feature_names_in_)
+else:
+    feature_order = list(full_input.keys())
+
+input_df = pd.DataFrame([full_input])[feature_order]
 
 # ---------------- PREDICTION ----------------
 def get_probs(model, data):
     probs = model.predict_proba(data)[0]
-    return probs[0], probs[1]   # 0 = Theft, 1 = Normal
+    return probs[0], probs[1]
 
 def risk_level(p):
     if p >= 0.80:
@@ -116,7 +121,6 @@ def risk_level(p):
 
 def plot_graph(p0, p1):
     fig = go.Figure()
-
     fig.add_trace(go.Bar(
         x=["Theft Risk", "Normal Usage"],
         y=[p0, p1],
@@ -124,18 +128,19 @@ def plot_graph(p0, p1):
         textposition="auto",
         marker_color=["red", "green"]
     ))
-
     fig.update_layout(title="⚡ Risk Probability", height=400)
     return fig
 
 # ---------------- FEATURE IMPORTANCE ----------------
 def show_feature_importance():
-    df = pd.DataFrame({
-        "Feature": model.feature_names_in_,
-        "Importance": model.feature_importances_
-    }).sort_values(by="Importance", ascending=False)
-
-    return df
+    if hasattr(model, "feature_importances_"):
+        df = pd.DataFrame({
+            "Feature": feature_order,
+            "Importance": model.feature_importances_
+        }).sort_values(by="Importance", ascending=False)
+        return df
+    else:
+        return pd.DataFrame({"Message": ["Feature importance not available for this model"]})
 
 # ---------------- ANALYZE ----------------
 if st.button("🔍 Analyze"):
