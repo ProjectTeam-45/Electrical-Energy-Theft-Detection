@@ -56,7 +56,7 @@ input_df = imputer.transform(input_df)
 # ---------------- RISK FUNCTIONS ----------------
 def get_risk_level(prob_theft):
     if prob_theft < 0.30:
-        return "🟢 Low Risk"
+        return "🟢  Normal Usage"
     elif prob_theft < 0.45:
         return "🟡 Medium Risk"
     elif prob_theft < 0.65:
@@ -69,11 +69,11 @@ def explain_risk(prob_theft):
     if prob_theft < 0.30:
         return "Normal usage pattern detected."
     elif prob_theft < 0.45:
-        return "Minor irregularities in usage pattern."
+        return "Minor irregularities in usage pattern, continue with monitering."
     elif prob_theft < 0.65:
-        return "Strong deviation from normal usage detected."
+        return "Strong deviation from normal usage detected, high alert action required."
     else:
-        return "Highly suspicious consumption pattern detected."
+        return "Highly suspicious consumption pattern detected high alert immediate action required."
 
 # ---------------- PROBABILITY ----------------
 def get_probs(model, data):
