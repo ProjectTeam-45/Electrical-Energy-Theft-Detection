@@ -47,7 +47,7 @@ for col in features:
 # ---------------- DATA PREP ----------------
 input_df = pd.DataFrame([user_input])
 
-# SAFE: enforce training feature order manually
+# enforce correct feature order
 input_df = input_df[features]
 
 # ---------------- IMPUTATION ----------------
@@ -56,7 +56,7 @@ input_df = imputer.transform(input_df)
 # ---------------- RISK FUNCTIONS ----------------
 def get_risk_level(prob_theft):
     if prob_theft < 0.30:
-        return "🟢  Normal Usage"
+        return "🟢 Normal Usage"
     elif prob_theft < 0.45:
         return "🟡 Medium Risk"
     elif prob_theft < 0.65:
@@ -69,18 +69,16 @@ def explain_risk(prob_theft):
     if prob_theft < 0.30:
         return "Normal usage pattern detected."
     elif prob_theft < 0.45:
-        return "Minor irregularities in usage pattern, continue with monitering."
+        return "Minor irregularities in usage pattern, continue with monitoring."
     elif prob_theft < 0.65:
         return "Strong deviation from normal usage detected, high alert action required."
     else:
-        return "Highly suspicious consumption pattern detected high alert immediate action required."
+        return "Highly suspicious consumption pattern detected. Immediate action required."
 
 # ---------------- PROBABILITY ----------------
 def get_probs(model, data):
     probs = model.predict_proba(data)[0]
-
-    # FIX: safe mapping (0 = Theft, 1 = Normal)
-    return probs[0], probs[1]
+    return probs[0], probs[1]  # (theft, normal)
 
 # ---------------- GRAPH ----------------
 def plot_probs(theft, normal):
@@ -100,18 +98,6 @@ def plot_probs(theft, normal):
     )
 
     return fig
-
-# ---------------- FEATURE IMPORTANCE ----------------
-def feature_importance():
-    try:
-        df = pd.DataFrame({
-            "Feature": features,
-            "Importance": model.feature_importances_
-        }).sort_values(by="Importance", ascending=False)
-
-        return df.head(5)
-    except:
-        return pd.DataFrame({"Message": ["Feature importance not available"]})
 
 # ---------------- PREDICTION ----------------
 if st.button("🔍 Analyze Risk"):
@@ -139,5 +125,6 @@ if st.button("🔍 Analyze Risk"):
     st.subheader("🧠 Explanation")
     st.info(explanation)
 
+    # ---------------- FEATURE IMPORTANCE IMAGE ----------------
     st.subheader("🔍 Feature Importance")
-    st.dataframe(feature_importance())
+    st.image("feature_importance.jpeg",caption="Feature Importance",use_container_width=True)
